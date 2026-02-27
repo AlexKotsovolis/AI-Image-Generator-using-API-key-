@@ -135,8 +135,8 @@ enter_button.place(x=220,y=290)
 preview_button=ttk.Button(window,text="Preview", command=preview_first)
 preview_button.place(x=480,y=290)
 
-image_label = Label(window, width = 400, height = 400)
-image_label.place(x=55, y=320)
+image_label = Label(window)
+image_label.place(x=200,y=330,width=400,height=400)
 
 window.bind("<Left>", prevImg)
 window.bind("<Right>", nextImg)

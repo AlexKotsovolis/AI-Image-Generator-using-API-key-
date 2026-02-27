@@ -1,0 +1,144 @@
+from tkinter import *
+from tkinter import ttk
+from ttkthemes import ThemedTk
+from PIL import Image, ImageTk
+import openai
+import os
+import base64
+OUTPUT_DIR = "outputs"
+import requests
+client = openai.OpenAI(api_key = 'YOUR API KEY')
+window = ThemedTk(theme="equilux")
+window.configure(themebg="equilux")
+window.geometry("800x1000")
+window.title("PolyGenix")
+window.resizable(False, False)
+
+image_paths = []
+cIndex = 0
+
+def generate_ideas(user_text,n):
+    prompt= f"Give me {n} an image about: {user_text}\n" \
+            f"return ONLY{n} lines. NO numbering, NO bullets, Each line must be a complete, detailed wallpaper prompt suitable for AI image generators, clearly incorporating the user's concept and describing visual style, lighting, atmosphere, colors, and composition "
+
+
+    resp=client.chat.completions.create(model="gpt-4-turbo",messages=[{"role":"user","content":prompt}],temperature=0.9)
+
+    ideas=[]
+    for line in resp.choices[0].message.content.splitlines():
+        print(line)
+        line=line.strip()
+        if line!="":
+            ideas.append(line)
+    return ideas[:n]
+
+
+def process(event=None):
+    global image_paths
+    global cIndex
+
+    user=text_widget.get()
+    if rb.get()=="Choice15":
+        n = 3
+    else:
+        n = 2
+
+
+    ideas= generate_ideas(user,n)
+
+    image_paths = generate_images_from_ideas2(ideas)
+
+    cIndex = 0
+    showImage(0)
+
+
+
+
+#def generate_images_from_ideas(ideas):
+    #paths=[]
+
+    #for i in range(len(ideas)):
+        #idea=ideas[i]
+
+        #img=client.images.generate(model="dall-e-3",prompt=idea,size="1792x1024",n=1)
+        #url=img.data[0].url
+        #print(url)
+
+
+def generate_images_from_ideas2(ideas):
+    global image_paths
+    paths = []
+    global idea
+
+    for i in range(len(ideas)):
+
+        idea = ideas[i]
+
+        img = client.images.generate(model="gpt-image-1.5",prompt=ideas[i],size="1536x1024",n = 1, output_format= "jpeg")
+
+        filepath = os.path.join(OUTPUT_DIR, f"request_{i+1}.jpg")
+
+        b64 = img.data[0].b64_json
+        print(b64)
+
+        with open(filepath, "wb") as f:
+            f.write(base64.b64decode(b64))
+
+        paths.append(filepath)
+
+    return paths
+
+def showImage(ind):
+    global imagePreview
+    global image_Label
+
+    img = Image.open(image_paths[ind])
+    img = img.resize((400,267), Image.Resampling.LANCZOS)
+    imagePreview = ImageTk.PhotoImage(img)
+    image_label.configure(image = imagePreview)
+
+def preview_first():
+    # Opens the first downladed image in Windows
+    if image_paths == True:
+        os.startfile(image_paths[0])
+
+def nextImg(event=None):
+    global cIndex
+    cIndex = (cIndex + 1) % len(image_paths)
+    showImage(cIndex)
+
+def prevImg(event=None):
+    global cIndex
+    cIndex = (cIndex - 1) % len(image_paths)
+    showImage(cIndex)
+
+#ui#
+
+title=ttk.Label(window,text="Ai Image Generator", font=("Agency FB Bold",35))
+title.pack()
+subTitle=ttk.Label(window, text="Bring your wallpaper ideas to life", font=("Agency FB",15))
+subTitle.pack()
+
+rb=StringVar(value="Choice5")
+rad1=ttk.Radiobutton(window, text="Short wait time, less results",value="Choice5",variable=rb)
+rad1.place(x=220,y=135)
+rad2=ttk.Radiobutton(window,text="Long wait time, more results",value="Choice15",variable=rb)
+rad2.place(x=420,y=135)
+
+
+text_widget=ttk.Entry(window, width=35,font=("Segoe UI",15))
+text_widget.place(x=200,y=200)
+
+enter_button=ttk.Button(window,text="Bring it to life",command=process)
+enter_button.place(x=220,y=290)
+
+preview_button=ttk.Button(window,text="Preview", command=preview_first)
+preview_button.place(x=480,y=290)
+
+image_label = Label(window, width = 400, height = 400)
+image_label.place(x=55, y=320)
+
+window.bind("<Left>", prevImg)
+window.bind("<Right>", nextImg)
+
+window.mainloop()

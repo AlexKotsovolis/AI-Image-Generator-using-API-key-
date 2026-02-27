@@ -2,3 +2,4 @@
 --> IT IS NORMAL IF THE PROGRAM DOESN'T RESPOND, JUST WAIT
 --> MAKE SURE YOU HAVE YOUR OWN API KEY
 --> NOTIFY ME FOR ANY ERRORS IN THE CODE, THAT EFFECT THE PROGRAM
+--> YOU CAN CHANGE THE PROMT, FROM THE ORIGINAL TO THE ONE YOU WANT (exampe = f"Give me {n} wallpaper ideas about: {user_text}\n" \        <-- just replace the code)
